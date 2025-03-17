@@ -1,41 +1,37 @@
-
-import React, { useEffect, useState } from "react";
-import { apiClient, getCurrentSong } from "./apiClient"; // Import API functions
+import React, { useState, useEffect } from "react";
 import { Button, Box, Typography, Paper } from "@mui/material";
+import { getCurrentSong } from "./apiClient"; // Import the function that handles API requests
+import SpotifyPlayer from "react-spotify-web-playback";
 
 const MusicPlayer = () => {
   const [song, setSong] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [accessToken, setAccessToken] = useState(""); // Hold the access token state
 
-  // Extract token from URL on first load
+  // Extract token from URL or localStorage
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token");
-  
+
     if (token) {
-      console.log("Extracted Token:", token); // Debugging
-      localStorage.setItem("authToken", token); // Store token in localStorage
-      window.history.replaceState({}, document.title, "/"); // Remove token from URL
-      setIsAuthenticated(true); // Set authenticated state
+      console.log("Extracted Token:", token);
+      localStorage.setItem("authToken", token); // Store the token
+      setAccessToken(token); // Update access token state
+      setIsAuthenticated(true);
+      window.history.replaceState({}, document.title, "/"); // Clean URL
     } else {
       const storedToken = localStorage.getItem("authToken");
       if (storedToken) {
-        console.log("Stored Token:", storedToken); // Debugging
-        setIsAuthenticated(true); // User is authenticated if token exists
+        console.log("Stored Token:", storedToken);
+        setAccessToken(storedToken); // Use the stored token
+        setIsAuthenticated(true);
       }
     }
   }, []);
 
   const fetchSong = async () => {
     try {
-      const token = localStorage.getItem("authToken"); // Retrieve token from localStorage
-      if (!token) {
-        console.log("No token found in localStorage");
-        setIsAuthenticated(false);
-        return;
-      }
-      console.log("Token being sent to backend:", token); // Debugging
-      const data = await getCurrentSong(token); // API call to get current song
+      const data = await getCurrentSong(); // API call to get current song
       setSong(data); // Set the fetched song
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -73,7 +69,12 @@ const MusicPlayer = () => {
     );
   }
 
-  if (!song) return <div>Loading...</div>; // Show loading until song is fetched
+  if (!song) return <div>
+    <iframe width="560" height="315" 
+    src="https://www.youtube.com/embed/jfKfPfyJRdk?si=YUJFPfgjw6_-kzhJ" 
+    title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+     referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>; // Show loading until song is fetched
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -81,10 +82,23 @@ const MusicPlayer = () => {
         <img src={song.album_cover} alt={song.name} width={200} />
         <Typography variant="h6">{song.name}</Typography>
         <Typography variant="body1">{song.artist}</Typography>
+        
+        {/* Spotify Web Playback Component */}
+        {/* <SpotifyPlayer
+          token={accessToken} // Pass the Spotify token
+          uris={[song.uri]} // Pass the song URI
+          play={true} // Start playing the song
+          callback={(state) => {
+            if (state?.error) {
+              console.error("Error playing song:", state.error);
+            }
+          }}
+        /> */}
+
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
-          <Button variant="contained">Play</Button>
-          <Button variant="contained">Pause</Button>
-          <Button variant="contained">Skip</Button>
+          <Button variant="contained" onClick={() => { /* Implement play functionality */ }}>Play</Button>
+          <Button variant="contained" onClick={() => { /* Implement pause functionality */ }}>Pause</Button>
+          <Button variant="contained" onClick={() => { /* Implement skip functionality */ }}>Skip</Button>
         </Box>
       </Paper>
     </Box>
