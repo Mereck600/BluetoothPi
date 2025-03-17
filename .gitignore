@@ -1,5 +1,6 @@
 # dependencies
 /frontend/node_modules/
+/authorization/node_modules/
 /front end/.pnp
 /front end.pnp.js
 
