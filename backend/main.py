@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 import os
+import platform
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import jwt
@@ -15,8 +16,12 @@ from typing import List
 import json
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-from comtypes import CLSCTX_ALL
+
+# Import pycaw only if running on Windows
+if platform.system() == "Windows":
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+    from comtypes import CLSCTX_ALL
+
 import subprocess
 
 
@@ -59,19 +64,19 @@ SCOPE = "user-library-read user-read-playback-state user-modify-playback-state"
 
 
 #Volume for pi
-# def set_volume(level: int):
-#     # level is between 0 and 100
-#     subprocess.run(["amixer", "sset", "PCM", f"{level}%"])
+def set_volume(level: int):
+    # level is between 0 and 100
+    subprocess.run(["amixer", "sset", "PCM", f"{level}%"])
 
-def set_volume(level: float):
-    devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(
-        IAudioEndpointVolume._iid_, 
-        CLSCTX_ALL, 
-        None
-    )
-    volume = interface.QueryInterface(IAudioEndpointVolume)
-    volume.SetMasterVolumeLevelScalar(level, None)  # level is between 0.0 and 1.0
+# def set_volume(level: float):
+#     devices = AudioUtilities.GetSpeakers()
+#     interface = devices.Activate(
+#         IAudioEndpointVolume._iid_, 
+#         CLSCTX_ALL, 
+#         None
+#     )
+#     volume = interface.QueryInterface(IAudioEndpointVolume)
+#     volume.SetMasterVolumeLevelScalar(level, None)  # level is between 0.0 and 1.0
 class VolumeRequest(BaseModel):
     level: float  # 0.0 to 1.0 for Windows, 0-100 for Raspberry Pi
 
@@ -81,6 +86,9 @@ async def change_volume(request: VolumeRequest):
     return {"status": "success"}
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello, World!"}
 # Initialize Spotipy OAuth Manager
 sp_oauth = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope=SCOPE)
 

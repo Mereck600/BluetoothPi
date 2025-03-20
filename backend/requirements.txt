@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+spotipy
+pyjwt
+pycaw
+comtypes
+python-multipart
+websockets
